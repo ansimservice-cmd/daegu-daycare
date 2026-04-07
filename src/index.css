@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00628d;
+  --color-primary-container: #007cb2;
+  --color-primary-fixed: #c9e6ff;
+  --color-primary-fixed-dim: #8aceff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fcfcff;
+  --color-on-primary-fixed: #001e2f;
+  --color-on-primary-fixed-variant: #004c6e;
+
+  --color-secondary: #006e1c;
+  --color-secondary-container: #91f78e;
+  --color-secondary-fixed: #94f990;
+  --color-secondary-fixed-dim: #78dc77;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #00731e;
+  --color-on-secondary-fixed: #002204;
+
+  --color-tertiary: #755700;
+  --color-tertiary-container: #946f00;
+  --color-tertiary-fixed: #ffdf9e;
+  --color-tertiary-fixed-dim: #fabd00;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #fffbff;
+
+  --color-surface: #f6faff;
+  --color-surface-bright: #f6faff;
+  --color-surface-dim: #d6dae0;
+  --color-surface-container: #eaeef4;
+  --color-surface-low: #f0f4f9;
+  --color-surface-high: #e5e8ee;
+  --color-surface-highest: #dfe3e8;
+  --color-surface-lowest: #ffffff;
+  --color-surface-variant: #dfe3e8;
+
+  --color-on-surface: #171c20;
+  --color-on-surface-variant: #3f4850;
+  --color-background: #f6faff;
+
+  --color-outline: #6f7881;
+  --color-outline-variant: #bec8d1;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+
+  --color-inverse-surface: #2c3135;
+  --color-inverse-on-surface: #edf1f7;
+  --color-inverse-primary: #8aceff;
+
+  --font-headline: "Plus Jakarta Sans", "Pretendard", sans-serif;
+  --font-body: "Pretendard", "Be Vietnam Pro", sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-headline);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.glass-nav {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-container));
+}
+
+.shadow-ambient {
+  box-shadow: 0 8px 32px rgba(23, 28, 32, 0.06);
+}
+
+.ghost-border {
+  border: 1px solid rgba(190, 200, 209, 0.2);
+}
