@@ -1,9 +1,18 @@
 import { useParams, Link } from 'react-router-dom';
-import { DAYCARES, DISTRICTS } from '../data/daycares';
+import { DISTRICTS, useDaycares } from '../data/daycares';
 
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>();
-  const daycare = DAYCARES.find((d) => d.id === id);
+  const { daycares, loading } = useDaycares();
+  const daycare = daycares.find((d) => d.id === id);
+
+  if (loading) {
+    return (
+      <div className="text-center py-40 text-on-surface-variant">
+        불러오는 중...
+      </div>
+    );
+  }
 
   if (!daycare) {
     return (
@@ -37,8 +46,22 @@ export default function DetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-8 left-8 right-8 text-white">
-          <div className="inline-flex items-center px-3 py-1 bg-primary/90 rounded-full text-xs font-bold mb-4 backdrop-blur-md">
-            대구광역시 {district?.name}
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <span className="inline-flex items-center px-3 py-1 bg-primary/90 rounded-full text-xs font-bold backdrop-blur-md">
+              대구광역시 {district?.name}
+            </span>
+            {daycare.hasCustomHomepage && (
+              <a
+                href={`https://cc.genomic.cc/${daycare.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-3 py-1 bg-tertiary/90 rounded-full text-xs font-bold backdrop-blur-md hover:bg-tertiary transition-colors"
+              >
+                <span className="material-symbols-outlined text-xs">smart_toy</span>
+                AI 상담 홈페이지
+                <span className="material-symbols-outlined text-xs">open_in_new</span>
+              </a>
+            )}
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">{daycare.name}</h1>
           <p className="text-white/80 font-medium flex items-center gap-2">

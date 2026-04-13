@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DISTRICTS } from '../data/daycares';
+import { DISTRICTS, useDaycares } from '../data/daycares';
 
 const DISTRICT_POSITIONS: Record<string, { x: number; y: number }> = {
   buk: { x: 50, y: 18 },
@@ -15,6 +16,14 @@ const DISTRICT_POSITIONS: Record<string, { x: number; y: number }> = {
 
 export default function DistrictMap() {
   const navigate = useNavigate();
+  const { daycares } = useDaycares();
+  const counts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const d of daycares) {
+      map[d.district] = (map[d.district] || 0) + 1;
+    }
+    return map;
+  }, [daycares]);
 
   return (
     <div className="relative w-full max-w-lg mx-auto aspect-square">
@@ -34,7 +43,7 @@ export default function DistrictMap() {
             <div className="flex flex-col items-center gap-1">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white shadow-ambient flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all group-hover:scale-110">
                 <span className="text-sm md:text-base font-bold text-primary group-hover:text-white">
-                  {district.count}
+                  {counts[district.id] || 0}
                 </span>
               </div>
               <span className="text-xs md:text-sm font-semibold text-on-surface whitespace-nowrap">

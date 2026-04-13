@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DaycareCard from '../components/DaycareCard';
-import { DAYCARES, DISTRICTS } from '../data/daycares';
+import { DISTRICTS, useDaycares } from '../data/daycares';
 
 const FEATURES = ['영아전담', '장애통합', '야간연장'] as const;
 
@@ -13,8 +13,19 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(new Set());
 
+  const { daycares, loading } = useDaycares();
+
+  // Pre-compute count per district
+  const districtCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const d of daycares) {
+      map[d.district] = (map[d.district] || 0) + 1;
+    }
+    return map;
+  }, [daycares]);
+
   const filtered = useMemo(() => {
-    return DAYCARES.filter((dc) => {
+    return daycares.filter((dc) => {
       if (district !== 'all' && dc.district !== district) return false;
       if (query && !dc.name.includes(query) && !dc.address.includes(query)) return false;
       if (selectedFeatures.size > 0) {
@@ -24,7 +35,7 @@ export default function SearchPage() {
       }
       return true;
     });
-  }, [district, query, selectedFeatures]);
+  }, [daycares, district, query, selectedFeatures]);
 
   const handleDistrictChange = (id: string) => {
     setDistrict(id);
@@ -95,7 +106,7 @@ export default function SearchPage() {
                   : 'bg-surface-low text-on-surface-variant hover:bg-surface-high'
               }`}
             >
-              {d.name} ({d.count})
+              {d.name} ({districtCounts[d.id] || 0})
             </button>
           ))}
         </div>
@@ -123,7 +134,16 @@ export default function SearchPage() {
         검색 결과 <span className="font-bold text-primary">{filtered.length}</span>건
       </div>
 
-      {filtered.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-72 bg-surface-container rounded-xl animate-pulse"
+            />
+          ))}
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filtered.map((dc) => (
             <DaycareCard key={dc.id} daycare={dc} />

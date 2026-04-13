@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { DISTRICTS } from '../data/daycares';
+import { useMemo } from 'react';
+import { DISTRICTS, useDaycares } from '../data/daycares';
 
 const ORG_CHART = [
   { title: '회장', name: '홍길동', role: '연합회 총괄' },
@@ -18,7 +19,15 @@ const TIMELINE = [
 ];
 
 export default function AboutPage() {
-  const totalCount = DISTRICTS.reduce((sum, d) => sum + d.count, 0);
+  const { daycares } = useDaycares();
+  const totalCount = daycares.length;
+  const districtCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const d of daycares) {
+      map[d.district] = (map[d.district] || 0) + 1;
+    }
+    return map;
+  }, [daycares]);
 
   return (
     <div>
@@ -136,7 +145,9 @@ export default function AboutPage() {
             {DISTRICTS.map((d) => (
               <div key={d.id} className="bg-surface-lowest p-3 rounded-lg text-center">
                 <p className="font-semibold text-sm">{d.name}</p>
-                <p className="text-xs text-on-surface-variant">{d.count}개소</p>
+                <p className="text-xs text-on-surface-variant">
+                  {districtCounts[d.id] || 0}개소
+                </p>
               </div>
             ))}
           </div>

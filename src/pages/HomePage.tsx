@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import DistrictMap from '../components/DistrictMap';
 import DaycareCard from '../components/DaycareCard';
-import { DAYCARES, POSTS, DISTRICTS } from '../data/daycares';
+import { POSTS, useDaycares } from '../data/daycares';
 
 export default function HomePage() {
-  const recentDaycares = DAYCARES.slice(0, 4);
+  const { daycares, loading } = useDaycares();
+  const recentDaycares = daycares.slice(0, 4);
   const recentPosts = POSTS.filter((p) => !p.pinned).slice(0, 3);
-  const totalCount = DISTRICTS.reduce((sum, d) => sum + d.count, 0);
+  const totalCount = daycares.length;
 
   return (
     <div>
@@ -98,9 +99,24 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recentDaycares.map((dc) => (
-              <DaycareCard key={dc.id} daycare={dc} />
-            ))}
+            {loading ? (
+              [0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-72 bg-surface-container rounded-xl animate-pulse"
+                />
+              ))
+            ) : recentDaycares.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <p className="text-on-surface-variant">
+                  등록된 어린이집이 아직 없습니다.
+                </p>
+              </div>
+            ) : (
+              recentDaycares.map((dc) => (
+                <DaycareCard key={dc.id} daycare={dc} />
+              ))
+            )}
           </div>
         </div>
       </section>
