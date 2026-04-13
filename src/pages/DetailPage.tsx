@@ -247,17 +247,71 @@ export default function DetailPage() {
           )}
 
           {/* CTA */}
-          <div className="bg-tertiary-fixed/30 p-6 rounded-xl ghost-border space-y-4">
+          <div className="bg-tertiary-fixed/30 p-6 rounded-xl ghost-border space-y-3">
             <h3 className="font-bold text-tertiary flex items-center gap-2">
               <span className="material-symbols-outlined">edit_note</span>
-              입소 상담 신청
+              {daycare.hasCustomHomepage
+                ? `${daycare.name} 더 알아보기`
+                : "입소 상담"}
             </h3>
-            <p className="text-sm text-on-surface-variant leading-relaxed">
-              {daycare.name}의 입소 및 대기 상담을 원하시면 아래 버튼을 눌러주세요.
-            </p>
-            <button className="w-full py-4 bg-tertiary text-white font-bold rounded-full hover:opacity-90 transition-all active:scale-95 shadow-md">
-              상담 예약하기
-            </button>
+
+            {daycare.hasCustomHomepage ? (
+              <>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  맞춤 홈페이지에서 사진·원장 인사말·새소식을 보거나, AI
+                  챗봇으로 24시간 즉시 상담받으세요 (13개 언어).
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  <a
+                    href={`https://cc.genomic.cc/${daycare.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-4 bg-white text-tertiary font-bold rounded-full hover:bg-tertiary-fixed transition-all active:scale-95 ghost-border flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">
+                      open_in_new
+                    </span>
+                    홈페이지 바로가기
+                  </a>
+                  <a
+                    href={`https://cc.genomic.cc/${daycare.id}#chat`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-4 bg-tertiary text-white font-bold rounded-full hover:opacity-90 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">smart_toy</span>
+                    상담 예약하기 (AI)
+                  </a>
+                </div>
+                {daycare.phone && (
+                  <a
+                    href={`tel:${daycare.phone}`}
+                    className="block text-center text-sm text-on-surface-variant hover:text-tertiary py-2"
+                  >
+                    📞 {daycare.phone} (직접 전화)
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  {daycare.name}의 입소 상담을 원하시면 직접 전화 부탁드립니다.
+                </p>
+                {daycare.phone ? (
+                  <a
+                    href={`tel:${daycare.phone}`}
+                    className="w-full py-4 bg-tertiary text-white font-bold rounded-full hover:opacity-90 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">call</span>
+                    전화 상담 ({daycare.phone})
+                  </a>
+                ) : (
+                  <p className="text-xs text-outline">
+                    전화번호 정보가 등록되지 않았습니다.
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

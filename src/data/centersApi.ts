@@ -58,6 +58,7 @@ interface CenterApiRow {
   lng: number | null;
   hasBus: boolean;
   extendedHours: boolean;
+  hasCustomHomepage: boolean;
   capacity: number | null;
   capacityText: string | null;
   currentEnrollment: number | null;
@@ -89,8 +90,7 @@ function adaptCenter(c: CenterApiRow): Daycare {
     image,
     lat: c.lat ?? 0,
     lng: c.lng ?? 0,
-    // 병아리처럼 district가 채워진 daycare는 이미 cc 페이지가 존재 (cc.genomic.cc/{id})
-    hasCustomHomepage: true,
+    hasCustomHomepage: !!c.hasCustomHomepage,
   };
 }
 
