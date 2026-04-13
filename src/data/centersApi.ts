@@ -59,6 +59,7 @@ interface CenterApiRow {
   hasBus: boolean;
   extendedHours: boolean;
   capacity: number | null;
+  capacityText: string | null;
   currentEnrollment: number | null;
   teacherCount: number | null;
   dataReferenceDate: string | null;

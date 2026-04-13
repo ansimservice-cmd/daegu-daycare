@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { DISTRICTS, useDaycares } from '../data/daycares';
+import FacilityMap from '../components/FacilityMap';
 
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,12 +29,27 @@ export default function DetailPage() {
 
   const district = DISTRICTS.find((d) => d.id === daycare.district);
 
-  const staffBreakdown = [
-    { label: '원장', count: 1 },
-    { label: '보육교사', count: daycare.teachers - 3 },
-    { label: '조리원', count: 1 },
-    { label: '기타 종사자', count: 1 },
-  ];
+  // Helpers for missing data (metrics not synced yet)
+  const fmt = (n: number) => (n > 0 ? `${n}명` : "—");
+  const fmtRatio = (cur: number, cap: number) => {
+    if (cap > 0 && cur > 0) return `${cur} / ${cap}명`;
+    if (cap > 0) return `${cap}명`;
+    return "—";
+  };
+
+  // 교직원 breakdown — 전체 수가 있을 때만 하위 구성 추정, 없으면 "정보 없음"
+  const hasStaffInfo = daycare.teachers > 0;
+  const staffBreakdown = hasStaffInfo
+    ? [
+        { label: "원장", count: 1 },
+        {
+          label: "보육교사",
+          count: Math.max(0, daycare.teachers - 3),
+        },
+        { label: "조리원", count: 1 },
+        { label: "기타 종사자", count: 1 },
+      ]
+    : [];
 
   return (
     <div className="pb-12">
@@ -78,10 +94,30 @@ export default function DetailPage() {
           {/* Status Bento */}
           <div className="bg-surface-lowest p-8 rounded-xl shadow-ambient grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: 'groups', label: '정원/현원', value: `${daycare.capacity} / ${daycare.current}명`, color: 'text-primary' },
-              { icon: 'school', label: '교직원수', value: `${daycare.teachers}명`, color: 'text-secondary' },
-              { icon: 'directions_bus', label: '통학버스', value: daycare.hasBus ? '운영중' : '미운영', color: 'text-tertiary' },
-              { icon: 'timer', label: '연장형', value: daycare.extended ? '가능' : '해당없음', color: 'text-primary' },
+              {
+                icon: "groups",
+                label: "정원/현원",
+                value: fmtRatio(daycare.current, daycare.capacity),
+                color: "text-primary",
+              },
+              {
+                icon: "school",
+                label: "교직원수",
+                value: fmt(daycare.teachers),
+                color: "text-secondary",
+              },
+              {
+                icon: "directions_bus",
+                label: "통학버스",
+                value: daycare.hasBus ? "운영중" : "미운영",
+                color: "text-tertiary",
+              },
+              {
+                icon: "timer",
+                label: "연장형",
+                value: daycare.extended ? "가능" : "해당없음",
+                color: "text-primary",
+              },
             ].map((item) => (
               <div key={item.label} className="flex flex-col items-center text-center p-4 bg-surface-low rounded-lg">
                 <span className={`material-symbols-outlined ${item.color} mb-2`}>{item.icon}</span>
@@ -126,19 +162,30 @@ export default function DetailPage() {
             </div>
           </div>
 
-          {/* Map Placeholder */}
+          {/* Map */}
           <div className="bg-surface-lowest p-8 rounded-xl shadow-ambient space-y-6">
             <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
               <span className="w-1 h-8 bg-primary rounded-full" />
               오시는 길
             </h2>
-            <div className="w-full h-80 rounded-lg overflow-hidden bg-surface-highest relative flex items-center justify-center">
-              <div className="flex flex-col items-center text-on-surface-variant gap-4">
-                <span className="material-symbols-outlined text-5xl">map</span>
-                <p className="font-medium">지도 데이터를 불러오는 중입니다...</p>
-                <p className="text-sm text-outline">{daycare.address}</p>
+            {daycare.lat && daycare.lng ? (
+              <FacilityMap
+                lat={daycare.lat}
+                lng={daycare.lng}
+                name={daycare.name}
+                address={daycare.address}
+              />
+            ) : (
+              <div className="w-full h-80 rounded-lg overflow-hidden bg-surface-highest relative flex items-center justify-center">
+                <div className="flex flex-col items-center text-on-surface-variant gap-4">
+                  <span className="material-symbols-outlined text-5xl">
+                    map
+                  </span>
+                  <p className="font-medium">위치 정보가 없습니다</p>
+                  <p className="text-sm text-outline">{daycare.address}</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -165,17 +212,22 @@ export default function DetailPage() {
           </div>
 
           {/* Staff */}
-          <div className="bg-surface-low p-6 rounded-xl space-y-4">
-            <h3 className="font-bold text-on-surface">교직원 구성</h3>
-            <div className="space-y-3">
-              {staffBreakdown.map((s) => (
-                <div key={s.label} className="flex justify-between items-center text-sm">
-                  <span className="text-on-surface-variant">{s.label}</span>
-                  <span className="font-bold">{s.count}명</span>
-                </div>
-              ))}
+          {hasStaffInfo && (
+            <div className="bg-surface-low p-6 rounded-xl space-y-4">
+              <h3 className="font-bold text-on-surface">교직원 구성</h3>
+              <div className="space-y-3">
+                {staffBreakdown.map((s) => (
+                  <div
+                    key={s.label}
+                    className="flex justify-between items-center text-sm"
+                  >
+                    <span className="text-on-surface-variant">{s.label}</span>
+                    <span className="font-bold">{s.count}명</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Features */}
           {daycare.features.length > 0 && (
