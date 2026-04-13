@@ -98,15 +98,22 @@ export default function DistrictMap() {
     }
 
     // 2) Daycare markers + popup overlays
+    const geocoder = kakao.maps.services?.Geocoder
+      ? new kakao.maps.services.Geocoder()
+      : null;
+
     for (const dc of daycares) {
       if (!dc.lat || !dc.lng) continue;
-      const position = new kakao.maps.LatLng(dc.lat, dc.lng);
+      const initialPosition = new kakao.maps.LatLng(dc.lat, dc.lng);
       const marker = new kakao.maps.Marker({
-        position,
+        position: initialPosition,
         map,
         title: dc.name,
         clickable: true,
       });
+
+      // initialPosition 은 popup 초기 anchor용 (geocoder 보정 전)
+      const position = initialPosition;
 
       const districtName =
         DISTRICTS.find((d) => d.id === dc.district)?.name || "";
@@ -143,8 +150,27 @@ export default function DistrictMap() {
       goBtn?.addEventListener("click", () => navigate(`/daycare/${dc.id}`));
 
       kakao.maps.event.addListener(marker, "click", () => {
+        // 마커 최신 위치(지오코더 보정 후일 수도)에 팝업 표시
+        popup.setPosition(marker.getPosition());
         popup.setMap(map);
       });
+
+      // Kakao 지오코더로 주소 → 정확 좌표 보정 (마커 위치만 업데이트, popup은
+      // 클릭 시점에 마커 위치 따라감)
+      if (geocoder && dc.address) {
+        geocoder.addressSearch(dc.address, (result, status) => {
+          if (
+            status === kakao.maps.services.Status.OK &&
+            result.length > 0
+          ) {
+            const exact = new kakao.maps.LatLng(
+              parseFloat(result[0].y),
+              parseFloat(result[0].x)
+            );
+            marker.setPosition(exact);
+          }
+        });
+      }
 
       overlaysRef.current.push(marker);
       overlaysRef.current.push(popup);

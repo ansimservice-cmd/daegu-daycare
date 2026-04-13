@@ -33,6 +33,30 @@ declare global {
     setPosition(latlng: KakaoLatLng): void;
   }
 
+  interface KakaoGeocoderResult {
+    /** 경도 (longitude) — string in API */
+    x: string;
+    /** 위도 (latitude) — string in API */
+    y: string;
+    address_name: string;
+    road_address?: { address_name?: string };
+  }
+
+  interface KakaoGeocoder {
+    addressSearch(
+      query: string,
+      callback: (result: KakaoGeocoderResult[], status: string) => void
+    ): void;
+  }
+
+  interface KakaoMarkerInst extends KakaoMarker {
+    setPosition(latlng: KakaoLatLng): void;
+  }
+
+  interface KakaoCustomOverlayInst extends KakaoCustomOverlay {
+    setPosition(latlng: KakaoLatLng): void;
+  }
+
   interface KakaoNamespace {
     maps: {
       load(cb: () => void): void;
@@ -46,7 +70,7 @@ declare global {
         map?: KakaoMap;
         title?: string;
         clickable?: boolean;
-      }) => KakaoMarker;
+      }) => KakaoMarkerInst;
       InfoWindow: new (options: {
         content: string | HTMLElement;
         removable?: boolean;
@@ -57,13 +81,17 @@ declare global {
         yAnchor?: number;
         xAnchor?: number;
         clickable?: boolean;
-      }) => KakaoCustomOverlay;
+      }) => KakaoCustomOverlayInst;
       event: {
         addListener(
           target: KakaoMarker | KakaoMap,
           type: string,
           handler: () => void
         ): void;
+      };
+      services: {
+        Geocoder: new () => KakaoGeocoder;
+        Status: { OK: string; ZERO_RESULT: string; ERROR: string };
       };
     };
   }

@@ -26,19 +26,14 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
     let mapInstance: KakaoMap | null = null;
     let overlayInstance: KakaoCustomOverlay | null = null;
 
+    let markerInst: KakaoMarkerInst | null = null;
+
     loadKakaoMaps()
       .then(() => {
-        if (cancelled) {
-          console.warn("[FacilityMap] cancelled before init");
-          return;
-        }
-        if (!containerRef.current) {
-          console.warn("[FacilityMap] container ref empty");
-          return;
-        }
+        if (cancelled) return;
+        if (!containerRef.current) return;
         const kakao = window.kakao;
         if (!kakao?.maps) {
-          console.warn("[FacilityMap] window.kakao.maps missing after load");
           setError("Kakao SDK가 초기화되지 않았습니다");
           return;
         }
@@ -47,7 +42,7 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
           center: position,
           level: 3,
         });
-        new kakao.maps.Marker({
+        markerInst = new kakao.maps.Marker({
           position,
           map: mapInstance,
           title: name,
@@ -80,6 +75,26 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
             mapInstance.setCenter(position);
           }
         }, 100);
+
+        // Kakao 지오코더로 주소를 카카오의 정확한 좌표로 보정
+        if (address && kakao.maps.services?.Geocoder) {
+          const geocoder = new kakao.maps.services.Geocoder();
+          geocoder.addressSearch(address, (result, status) => {
+            if (cancelled) return;
+            if (
+              status === kakao.maps.services.Status.OK &&
+              result.length > 0
+            ) {
+              const exact = new kakao.maps.LatLng(
+                parseFloat(result[0].y),
+                parseFloat(result[0].x)
+              );
+              mapInstance?.setCenter(exact);
+              markerInst?.setPosition(exact);
+              overlayInstance?.setPosition(exact);
+            }
+          });
+        }
 
         setReady(true);
       })
