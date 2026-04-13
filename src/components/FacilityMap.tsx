@@ -15,6 +15,7 @@ interface Props {
 export default function FacilityMap({ lat, lng, name, address }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!getKakaoMapKey()) {
@@ -27,8 +28,20 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
 
     loadKakaoMaps()
       .then(() => {
-        if (cancelled || !containerRef.current) return;
+        if (cancelled) {
+          console.warn("[FacilityMap] cancelled before init");
+          return;
+        }
+        if (!containerRef.current) {
+          console.warn("[FacilityMap] container ref empty");
+          return;
+        }
         const kakao = window.kakao;
+        if (!kakao?.maps) {
+          console.warn("[FacilityMap] window.kakao.maps missing after load");
+          setError("Kakao SDK가 초기화되지 않았습니다");
+          return;
+        }
         const position = new kakao.maps.LatLng(lat, lng);
         mapInstance = new kakao.maps.Map(containerRef.current, {
           center: position,
@@ -59,8 +72,19 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
           xAnchor: 0.5,
         });
         overlayInstance.setMap(mapInstance);
+
+        // Force a relayout in case the container got measured after Kakao init
+        setTimeout(() => {
+          if (!cancelled && mapInstance) {
+            mapInstance.relayout();
+            mapInstance.setCenter(position);
+          }
+        }, 100);
+
+        setReady(true);
       })
       .catch((e: Error) => {
+        console.error("[FacilityMap] load failed", e);
         if (!cancelled) setError(e.message);
       });
 
@@ -71,19 +95,8 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
     };
   }, [lat, lng, name, address]);
 
-  if (error) {
-    return (
-      <div className="w-full h-80 rounded-lg overflow-hidden bg-surface-highest flex items-center justify-center text-sm text-amber-800 border border-amber-200 bg-amber-50 p-4 text-center">
-        {error}
-      </div>
-    );
-  }
-
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-80 rounded-lg overflow-hidden"
-    >
+    <>
       <style>{`
         .facility-popup-inner {
           position: relative;
@@ -93,7 +106,6 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
           padding: 12px 16px;
           box-shadow: 0 12px 32px rgba(0,35,111,0.25);
           font-family: inherit;
-          pointer-events: none;
         }
         .facility-popup-inner::after {
           content: "";
@@ -119,7 +131,21 @@ export default function FacilityMap({ lat, lng, name, address }: Props) {
           line-height: 1.4;
         }
       `}</style>
-    </div>
+      {error ? (
+        <div className="w-full h-80 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-sm text-amber-800 p-4 text-center">
+          {error}
+        </div>
+      ) : (
+        <div className="relative w-full h-80 rounded-lg overflow-hidden bg-surface-low">
+          <div ref={containerRef} className="absolute inset-0" />
+          {!ready && (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-on-surface-variant pointer-events-none">
+              지도 불러오는 중...
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 

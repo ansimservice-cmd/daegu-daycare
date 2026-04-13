@@ -7,7 +7,7 @@
  * - 자동로드 off(`autoload=false`) 후 window.kakao.maps.load(cb) 로 명시 초기화
  */
 
-const SDK_BASE = "https://dapi.kakao.com/v2/maps/sdk.js";
+const SDK_BASE = "//dapi.kakao.com/v2/maps/sdk.js";
 let loadPromise: Promise<void> | null = null;
 
 export function getKakaoMapKey(): string | undefined {
