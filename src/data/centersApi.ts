@@ -59,6 +59,7 @@ interface CenterApiRow {
   hasBus: boolean;
   extendedHours: boolean;
   hasCustomHomepage: boolean;
+  isFederationMember: boolean;
   capacity: number | null;
   capacityText: string | null;
   currentEnrollment: number | null;
@@ -106,7 +107,12 @@ export async function fetchDaycares(): Promise<Daycare[]> {
       if (!res.ok) throw new Error(`${res.status}`);
       const data = (await res.json()) as { centers?: CenterApiRow[] };
       const list = (data.centers || [])
-        .filter((c) => c.category === "daycare" && c.district)
+        .filter(
+          (c) =>
+            c.category === "daycare" &&
+            c.district &&
+            c.isFederationMember === true
+        )
         .map(adaptCenter);
       cached = list;
       return list;
