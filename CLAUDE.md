@@ -59,17 +59,78 @@ src/
     └── daycares.ts     # 샘플 데이터 (어린이집 8개 + 게시글 8개 + 9개구)
 ```
 
-## 배포 명령어
+## 🔗 원천 데이터: cc.genomic.cc (genomic-platform)
+
+**경로**: `C:\Users\admin\genomic-platform` | **GitHub**: `ansimservice-cmd/genomic-platform`
+
+### 관계 (이 프로젝트는 읽기 전용 프론트)
+```
+cc.genomic.cc [genomic-platform]  ← 데이터 원천 (D1 centers, 관리자 UI, API)
+                ↓ /api/centers (fetch)
+00.genomic.cc [이 프로젝트]        ← 읽기 전용, 관리자 페이지 없음
+```
+
+### ⚠️ 이 프로젝트에는 관리자 UI 없음
+- 시설 정보 추가·수정·삭제는 **항상 cc.genomic.cc/admin**에서
+- 00.genomic.cc에 시설을 노출시키려면 cc 관리자에서 `is_federation_member` 체크박스 ON
+- 여기 저장소에서 시설 데이터 수정 시도 금지 (정적 배열 아님, API 읽기 전용)
+
+### 대표님 지시어 해석 규칙
+| 지시 | 실제 작업 |
+|------|---------|
+| "00에 어린이집 추가" | **cc.genomic.cc/admin** 작업 |
+| "00에서 OO 제외" | **cc.genomic.cc/admin**에서 `is_federation_member` 체크 해제 |
+| "00 디자인/레이아웃 바꿔" | **이 프로젝트** (daegu-daycare) |
+| "00에 게시판 추가" | **이 프로젝트** (현재 정적 POSTS 배열 `src/data/daycares.ts`) |
+
+### 디렉토리 노출 필터 (`src/data/centersApi.ts`)
+```ts
+.filter(c => c.category === "daycare" && c.district && c.isFederationMember === true)
+```
+cc.genomic.cc API 응답에서 위 3조건 전부 만족하는 시설만 노출.
+
+### 🚨 배포 지뢰 (2026-04-21 세션에서 2번 넘어짐)
+
+**Cloudflare Pages Production branch = `main`, git 로컬 = `master`**
+
+기본 `wrangler pages deploy dist --project-name=daegu-daycare` 은 브랜치명(`master`)을 자동 인식해 **Preview 환경**으로만 올라감. `00.genomic.cc` 실도메인은 여전히 옛날 번들 서빙.
+
+**올바른 배포 명령**:
 ```bash
 cd /c/Users/admin/daegu-daycare
 npm run build
-npx wrangler pages deploy dist --project-name=daegu-daycare
+npx wrangler pages deploy dist --project-name=daegu-daycare \
+  --branch=main --commit-dirty=true --commit-message="english only"
+```
+
+- `--branch=main` **필수** (Production 반영)
+- `--commit-message`는 **반드시 영문** (한글 시 Cloudflare API 400 에러)
+- 배포 후 번들 반영 검증:
+  ```bash
+  curl -s https://00.genomic.cc/ | grep -oE "assets/index-[A-Za-z0-9_-]+\.js"
+  ls dist/assets/ | grep "^index-.*\.js"
+  # 둘의 해시가 같아야 정상
+  ```
+
+### cc.genomic.cc API 응답 타입 변경 시
+`CenterApiRow` (`src/data/centersApi.ts`) 타입을 cc 응답 필드와 동기화. cc가 새 필드 추가 시 이 타입도 확장 필수 (안 그러면 TypeScript 컴파일 에러 or 런타임 undefined).
+
+### 현재 이 프로젝트 안에 정적으로 남아있는 것
+- `src/data/daycares.ts`의 `POSTS` 배열 (알림마당/게시판 — 추후 cc로 이관 예정)
+- `DISTRICTS` 메타데이터 (대구 9개 구군 목록)
+- 그 외 어린이집 데이터는 **centersApi.ts에서 re-export** (cc API 경유)
+
+## 배포 명령어 (정식)
+```bash
+cd /c/Users/admin/daegu-daycare
+npm run build
+npx wrangler pages deploy dist --project-name=daegu-daycare \
+  --branch=main --commit-dirty=true --commit-message="short english summary"
 ```
 
 ## 향후 확장 (미구현)
 - 카카오/네이버 지도 API 연동 (현재 placeholder)
-- 백엔드 API + DB 연동 (현재 정적 데이터)
-- 관리자 페이지 (게시판 CRUD, 어린이집 정보 업데이트)
-- 엑셀 일괄 업로드
-- 회원 로그인/인증
-- 구별 지회장 권한 관리
+- POSTS(알림마당) cc.genomic.cc로 이관
+- 엑셀 일괄 업로드 (cc 관리자 측에 만들 예정)
+- 회원 로그인/인증 (필요 시 cc.genomic.cc SSO 경유)
+- 구별 지회장 권한 관리 (cc 관리자 측)
